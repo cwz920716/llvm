@@ -1,4 +1,5 @@
 #include "Bulldog.h"
+#include "llvm/IR/InstrTypes.h"
 
 namespace bulldog {
 
@@ -27,6 +28,7 @@ void IRPrinter::EmitBasicBlock(BasicBlock &bb) {
 void IRPrinter::EmitInstruction(Instruction &inst) {
   Instruction *ip = &inst;
   if (inst.isBinaryOp()) {
+    ss << GetOperand(ip) << " <- ";
     switch(inst.getOpcode()) {
       case Instruction::Add:
         ss << "add ";
@@ -40,12 +42,90 @@ void IRPrinter::EmitInstruction(Instruction &inst) {
       default:
         ss << "unknown ";
     }
+    ss << GetOperand(ip->getOperand(0)) << ", ";
+    ss << GetOperand(ip->getOperand(1));
+  } else if (GetElementPtrInst *gep = dyn_cast<GetElementPtrInst>(ip)) {
+    ss << GetOperand(ip) << " <- ";
+    ss << "vaddr ";
+    ss << GetOperand(gep->getPointerOperand()) << "";
+    for (int i = 0; i < gep->getNumIndices(); i++) {
+      ss << "[" << GetOperand(ip->getOperand(i + 1)) << "]";
+    }
+  } else if (AllocaInst *alloca = dyn_cast<AllocaInst>(ip)) {
+    ss << GetOperand(ip) << " <- ";
+    ss << "alloca ";
+    // errs() << *alloca->getType()->getElementType() << "\n";
+    auto type = alloca->getType()->getElementType();
+    ss << "[" << GetOperand(alloca->getArraySize()) << "]";
+    if (type->isArrayTy()) {
+      ss << "[" << type->getArrayNumElements() << "]";
+    }
+    // ss << alloca->getType()->getElementType()->getVectorNumElements();
+  } else if (StoreInst *st = dyn_cast<StoreInst>(ip)) {
+    ss << "store ";
+    ss << GetOperand(st->getPointerOperand()) << ", ";
+    ss << GetOperand(st->getValueOperand());
+  } else if (LoadInst *ld = dyn_cast<LoadInst>(ip)) {
+    ss << GetOperand(ip) << " <- ";
+    ss << "load ";
+    ss << GetOperand(ld->getPointerOperand()) << ", ";
   } else if (PHINode *phi = dyn_cast<PHINode>(ip)) {
-    ss << "phi ";
+    ss << GetOperand(ip) << " <- ";
+    ss << "phi { ";
+    for (int i = 0; i < phi->getNumIncomingValues(); i++) {
+      ss << phi->getIncomingBlock(i)->getName().str() << " : ";
+      ss << GetOperand(phi->getIncomingValue(i)) << " , ";
+    }
+    ss << "}";
+  } else if (CmpInst *cmp = dyn_cast<CmpInst>(ip)) {
+    ss << GetOperand(ip) << " <- ";
+    if (FCmpInst *fcmp = dyn_cast<FCmpInst>(ip)) {
+      ss << "fcmp ";
+    } else {
+      // ss << "cmp ";
+    }
+    switch (cmp->getPredicate()) {
+      case ICmpInst::ICMP_NE:
+        ss << "ne ";
+        break;
+      case ICmpInst::ICMP_SLT:
+        ss << "slt ";
+        break;
+      default:
+        ss << " <? ";
+    }
+    ss << GetOperand(ip->getOperand(0)) << ", ";
+    ss << GetOperand(ip->getOperand(1));
+  } else if (CastInst *cast = dyn_cast<CastInst>(ip)) {
+    ss << GetOperand(ip) << " <- ";
+    if (cast->isIntegerCast()) {
+      ss << "mov ";
+    } else {
+      if (cast->getSrcTy()->isFloatingPointTy()) {
+        ss << "fcast ";
+      } else {
+        ss << "icast ";
+      }
+    }
+    ss << GetOperand(ip->getOperand(0));
   } else if (inst.isTerminator()) {
+    if (BranchInst *br = dyn_cast<BranchInst>(ip)) {
+      if (br->isConditional()) {
+        ss << "if " << GetOperand(br->getCondition()) << " goto " << br->getSuccessor(0)->getName().str();
+        ss << "\ngoto " << br->getSuccessor(1)->getName().str();
+      } else {
+        ss << "goto " << br->getSuccessor(0)->getName().str();
+      }
+    } else if (ReturnInst *ret = dyn_cast<ReturnInst>(ip)) {
+      ss << "ret " << GetOperand(ret->getReturnValue());
+    } else {
+      ss << "err>terminator";
+    }
+  } else {
+    ss << "err>";
   }
   ss << ";\n";
-  errs() << inst << "\n";
+  // errs() << inst << "\n";
 }
 
 }  // namespace bulldog

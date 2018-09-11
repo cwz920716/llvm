@@ -50,6 +50,17 @@ class IRPrinter : public FunctionPass {
     return value_id_map[v];
   }
 
+  std::string GetOperand(Value *v) {
+    if (ConstantInt *ci = dyn_cast<ConstantInt>(v)) {
+      return ci->getValue().toString(10, true);
+    } else if (ConstantFP *cf = dyn_cast<ConstantFP>(v)) {
+      return std::to_string(cf->getValueAPF().convertToFloat());
+    } else {
+      int id = GetValueId(v);
+      return "t" + std::to_string(id);
+    }
+  }
+
   int GetBlockId(BasicBlock *bb) {
     if (bb_id_map.find(bb) == bb_id_map.end()) {
       bb_id_map[bb] = num_bbs;
