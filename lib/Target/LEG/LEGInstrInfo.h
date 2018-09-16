@@ -40,7 +40,7 @@ public:
   /// the destination along with the FrameIndex of the loaded stack slot.  If
   /// not, return 0.  This predicate must return 0 if the instruction has
   /// any side effects other than loading from the stack slot.
-  virtual unsigned isLoadFromStackSlot(const MachineInstr *MI,
+  virtual unsigned isLoadFromStackSlot(const MachineInstr &MI,
                                        int &FrameIndex) const override;
 
   /// isStoreToStackSlot - If the specified machine instruction is a direct
@@ -48,24 +48,26 @@ public:
   /// the source reg along with the FrameIndex of the loaded stack slot.  If
   /// not, return 0.  This predicate must return 0 if the instruction has
   /// any side effects other than storing to the stack slot.
-  virtual unsigned isStoreToStackSlot(const MachineInstr *MI,
+  virtual unsigned isStoreToStackSlot(const MachineInstr &MI,
                                       int &FrameIndex) const override;
 
-  virtual bool AnalyzeBranch(MachineBasicBlock &MBB, MachineBasicBlock *&TBB,
+  virtual bool analyzeBranch(MachineBasicBlock &MBB, MachineBasicBlock *&TBB,
                              MachineBasicBlock *&FBB,
                              SmallVectorImpl<MachineOperand> &Cond,
                              bool AllowModify) const override;
 
-  virtual unsigned RemoveBranch(MachineBasicBlock &MBB) const override;
+  virtual unsigned removeBranch(MachineBasicBlock &MBB,
+                        int *BytesRemoved = nullptr) const override;
   
   
-  virtual unsigned InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
+  virtual unsigned insertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
                                 MachineBasicBlock *FBB,
                                 ArrayRef<MachineOperand> Cond,
-                                DebugLoc DL) const override;
+                                const DebugLoc &DL,
+                        int *BytesAdded = nullptr) const override;
 
   virtual void copyPhysReg(MachineBasicBlock &MBB,
-                           MachineBasicBlock::iterator I, DebugLoc DL,
+                           MachineBasicBlock::iterator I, const DebugLoc &DL,
                            unsigned DestReg, unsigned SrcReg,
                            bool KillSrc) const override;
 
@@ -83,7 +85,7 @@ public:
                                     const TargetRegisterInfo *TRI) const
       override;
 
-  virtual bool expandPostRAPseudo(MachineBasicBlock::iterator MI) const
+  virtual bool expandPostRAPseudo(MachineInstr &MI) const
      override;
 };
 }

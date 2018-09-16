@@ -284,6 +284,9 @@ public:
     VK_Hexagon_LD_PLT,
     VK_Hexagon_IE,
     VK_Hexagon_IE_GOT,
+    
+    VK_LEG_LO,
+    VK_LEG_HI,
 
     VK_WebAssembly_FUNCTION, // Function table index, rather than virtual addr
     VK_WebAssembly_GLOBAL,   // Global object index

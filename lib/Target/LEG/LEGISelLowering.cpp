@@ -122,7 +122,7 @@ SDValue LEGTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
   const unsigned NumBytes = CCInfo.getNextStackOffset();
 
   Chain =
-      DAG.getCALLSEQ_START(Chain, DAG.getIntPtrConstant(NumBytes, Loc, true),
+      DAG.getCALLSEQ_START(Chain, NumBytes, 0,
                            Loc);
 
   SmallVector<std::pair<unsigned, SDValue>, 8> RegsToPass;
@@ -148,7 +148,7 @@ SDValue LEGTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
     SDValue PtrOff = DAG.getIntPtrConstant(VA.getLocMemOffset(), Loc);
     PtrOff = DAG.getNode(ISD::ADD, Loc, MVT::i32, StackPtr, PtrOff);
     MemOpChains.push_back(DAG.getStore(Chain, Loc, Arg, PtrOff,
-                                       MachinePointerInfo(), false, false, 0));
+                                       MachinePointerInfo()));
   }
 
   // Emit all stores, make sure they occur before the call.
@@ -242,7 +242,7 @@ SDValue LEGTargetLowering::LowerCallResult(
 /// LEG formal arguments implementation
 SDValue LEGTargetLowering::LowerFormalArguments(
     SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
-    const SmallVectorImpl<ISD::InputArg> &Ins, SDLoc dl, SelectionDAG &DAG,
+    const SmallVectorImpl<ISD::InputArg> &Ins, const SDLoc &dl, SelectionDAG &DAG,
     SmallVectorImpl<SDValue> &InVals) const {
   MachineFunction &MF = DAG.getMachineFunction();
   MachineRegisterInfo &RegInfo = MF.getRegInfo();
@@ -275,14 +275,14 @@ SDValue LEGTargetLowering::LowerFormalArguments(
 
     const unsigned Offset = VA.getLocMemOffset();
 
-    const int FI = MF.getFrameInfo()->CreateFixedObject(4, Offset, true);
+    const int FI = MF.getFrameInfo().CreateFixedObject(4, Offset, true);
     EVT PtrTy = getPointerTy(DAG.getDataLayout());
     SDValue FIPtr = DAG.getFrameIndex(FI, PtrTy);
 
     assert(VA.getValVT() == MVT::i32 &&
            "Only support passing arguments as i32");
     SDValue Load = DAG.getLoad(VA.getValVT(), dl, Chain, FIPtr,
-                               MachinePointerInfo(), false, false, false, 0);
+                               MachinePointerInfo());
 
     InVals.push_back(Load);
   }
@@ -313,7 +313,7 @@ LEGTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
                                bool isVarArg,
                                const SmallVectorImpl<ISD::OutputArg> &Outs,
                                const SmallVectorImpl<SDValue> &OutVals,
-                               SDLoc dl, SelectionDAG &DAG) const {
+                               const SDLoc &dl, SelectionDAG &DAG) const {
   if (isVarArg) {
     report_fatal_error("VarArg not supported");
   }

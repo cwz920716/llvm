@@ -31,7 +31,7 @@ public:
                     MachineBasicBlock &MBB) const override;
   void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
 
-  void eliminateCallFramePseudoInstr(MachineFunction &MF,
+  MachineBasicBlock::iterator eliminateCallFramePseudoInstr(MachineFunction &MF,
                                      MachineBasicBlock &MBB,
                                      MachineBasicBlock::iterator I)
                                      const override;

@@ -28,8 +28,7 @@ using namespace llvm;
 LEGMCInstLower::LEGMCInstLower(class AsmPrinter &asmprinter)
     : Printer(asmprinter) {}
 
-void LEGMCInstLower::Initialize(Mangler *M, MCContext *C) {
-  Mang = M;
+void LEGMCInstLower::Initialize(MCContext *C) {
   Ctx = C;
 }
 

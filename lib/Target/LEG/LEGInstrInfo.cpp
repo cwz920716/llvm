@@ -46,7 +46,7 @@ LEGInstrInfo::LEGInstrInfo()
 /// not, return 0.  This predicate must return 0 if the instruction has
 /// any side effects other than loading from the stack slot.
 unsigned
-LEGInstrInfo::isLoadFromStackSlot(const MachineInstr *MI, int &FrameIndex) const{
+LEGInstrInfo::isLoadFromStackSlot(const MachineInstr &MI, int &FrameIndex) const{
   assert(0 && "Unimplemented");
   return 0;
 }
@@ -57,7 +57,7 @@ LEGInstrInfo::isLoadFromStackSlot(const MachineInstr *MI, int &FrameIndex) const
   /// not, return 0.  This predicate must return 0 if the instruction has
   /// any side effects other than storing to the stack slot.
 unsigned
-LEGInstrInfo::isStoreToStackSlot(const MachineInstr *MI,
+LEGInstrInfo::isStoreToStackSlot(const MachineInstr &MI,
                                    int &FrameIndex) const {
   assert(0 && "Unimplemented");
   return 0;
@@ -91,7 +91,7 @@ LEGInstrInfo::isStoreToStackSlot(const MachineInstr *MI,
 /// cases where this method returns success.
 ///
 bool
-LEGInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB, MachineBasicBlock *&TBB,
+LEGInstrInfo::analyzeBranch(MachineBasicBlock &MBB, MachineBasicBlock *&TBB,
                             MachineBasicBlock *&FBB,
                             SmallVectorImpl<MachineOperand> &Cond,
                             bool AllowModify) const {
@@ -120,7 +120,7 @@ LEGInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB, MachineBasicBlock *&TBB,
 /// This is only invoked in cases where AnalyzeBranch returns success. It
 /// returns the number of instructions that were removed.
 unsigned
-LEGInstrInfo::RemoveBranch(MachineBasicBlock &MBB) const {
+LEGInstrInfo::removeBranch(MachineBasicBlock &MBB, int *BytesRemoved) const {
   if (MBB.empty())
     return 0;
   unsigned NumRemoved = 0;
@@ -148,16 +148,19 @@ LEGInstrInfo::RemoveBranch(MachineBasicBlock &MBB) const {
 /// cases where AnalyzeBranch doesn't apply because there was no original
 /// branch to analyze.  At least this much must be implemented, else tail
 /// merging needs to be disabled.
-unsigned LEGInstrInfo::InsertBranch(MachineBasicBlock &MBB,
+unsigned LEGInstrInfo::insertBranch(MachineBasicBlock &MBB,
                                     MachineBasicBlock *TBB,
                                     MachineBasicBlock *FBB,
                                     ArrayRef<MachineOperand> Cond,
-                                    DebugLoc DL) const {
+                                    const DebugLoc &DL,
+                                    int *BytesAdded) const {
   unsigned NumInserted = 0;
+  assert(!BytesAdded && "code size not handled");
   
   // Insert any conditional branch.
   if (Cond.size() > 0) {
-    BuildMI(MBB, MBB.end(), DL, get(LEG::Bcc)).addOperand(Cond[0]).addMBB(TBB);
+    unsigned ConditionalCode = Cond[0].getImm();
+    BuildMI(MBB, MBB.end(), DL, get(LEG::Bcc)).addImm(ConditionalCode).addMBB(TBB);
     NumInserted++;
   }
   
@@ -170,7 +173,7 @@ unsigned LEGInstrInfo::InsertBranch(MachineBasicBlock &MBB,
 }
 
 void LEGInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
-                                 MachineBasicBlock::iterator I, DebugLoc DL,
+                                 MachineBasicBlock::iterator I, const DebugLoc &DL,
                                  unsigned DestReg, unsigned SrcReg,
                                  bool KillSrc) const {
   BuildMI(MBB, I, I->getDebugLoc(), get(LEG::MOVrr), DestReg)
@@ -199,23 +202,23 @@ void LEGInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
       .addFrameIndex(FrameIndex).addImm(0);
 }
 
-bool LEGInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const
+bool LEGInstrInfo::expandPostRAPseudo(MachineInstr &MI) const
 {
-  switch (MI->getOpcode())
+  switch (MI.getOpcode())
   {
   default:
     return false;
   case LEG::MOVi32: {
-    DebugLoc DL = MI->getDebugLoc();
-    MachineBasicBlock &MBB = *MI->getParent();
+    DebugLoc DL = MI.getDebugLoc();
+    MachineBasicBlock *MBB = MI.getParent();
 
-    const unsigned DstReg = MI->getOperand(0).getReg();
-    const bool DstIsDead = MI->getOperand(0).isDead();
+    const unsigned DstReg = MI.getOperand(0).getReg();
+    const bool DstIsDead = MI.getOperand(0).isDead();
 
-    const MachineOperand &MO = MI->getOperand(1);
+    const MachineOperand &MO = MI.getOperand(1);
 
-    auto LO16 = BuildMI(MBB, MI, DL, get(LEG::MOVLOi16), DstReg);
-    auto HI16 = BuildMI(MBB, MI, DL, get(LEG::MOVHIi16))
+    auto LO16 = BuildMI(*MBB, MI, DL, get(LEG::MOVLOi16), DstReg);
+    auto HI16 = BuildMI(*MBB, MI, DL, get(LEG::MOVHIi16))
                     .addReg(DstReg, RegState::Define | getDeadRegState(DstIsDead))
                     .addReg(DstReg);
 
@@ -232,7 +235,7 @@ bool LEGInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const
       HI16 = HI16.addGlobalAddress(GV, MO.getOffset(), TF | LEGII::MO_HI16);
     }
 
-    MBB.erase(MI);
+    MBB->erase_instr(&MI);
     return true;
   }
   }

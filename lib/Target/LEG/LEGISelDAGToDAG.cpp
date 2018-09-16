@@ -34,11 +34,11 @@ public:
   explicit LEGDAGToDAGISel(LEGTargetMachine &TM, CodeGenOpt::Level OptLevel)
       : SelectionDAGISel(TM, OptLevel), Subtarget(*TM.getSubtargetImpl()) {}
 
-  SDNode *Select(SDNode *N) override;
+  void Select(SDNode *N) override;
 
   bool SelectAddr(SDValue Addr, SDValue &Base, SDValue &Offset);
 
-  virtual const char *getPassName() const override {
+  virtual StringRef getPassName() const override {
     return "LEG DAG->DAG Pattern Instruction Selection";
   }
 
@@ -75,7 +75,8 @@ SDNode *LEGDAGToDAGISel::SelectMoveImmediate(SDNode *N) {
   uint64_t ImmVal = ConstVal->getZExtValue();
   uint64_t SupportedMask = 0xfffffffff;
   if ((ImmVal & SupportedMask) != ImmVal) {
-    return SelectCode(N);
+    SelectCode(N);
+    return nullptr;
   }
 
   // Select the low part of the immediate move.
@@ -118,15 +119,21 @@ SDNode *LEGDAGToDAGISel::SelectConditionalBranch(SDNode *N) {
   return CurDAG->getMachineNode(LEG::Bcc, N, MVT::Other, BranchOps);
 }
 
-SDNode *LEGDAGToDAGISel::Select(SDNode *N) {
+void LEGDAGToDAGISel::Select(SDNode *N) {
+  llvm::SDNode* NewNode = nullptr;
   switch (N->getOpcode()) {
   case ISD::Constant:
-    return SelectMoveImmediate(N);
+    NewNode = SelectMoveImmediate(N);
+    assert(NewNode != nullptr);
+    ReplaceNode(N, NewNode);
+    break;
   case ISD::BR_CC:
-    return SelectConditionalBranch(N);
+    NewNode = SelectConditionalBranch(N);
+    ReplaceNode(N, NewNode);
+    break;
   }
 
-  return SelectCode(N);
+  SelectCode(N);
 }
 
 /// createLEGISelDag - This pass converts a legalized DAG into a

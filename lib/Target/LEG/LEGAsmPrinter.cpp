@@ -55,7 +55,7 @@ public:
                          std::unique_ptr<MCStreamer> Streamer)
       : AsmPrinter(TM, std::move(Streamer)), MCInstLowering(*this) {}
 
-  virtual const char *getPassName() const { return "LEG Assembly Printer"; }
+  virtual StringRef getPassName() const { return "LEG Assembly Printer"; }
 
   void EmitFunctionEntryLabel();
   void EmitInstruction(const MachineInstr *MI);
@@ -64,7 +64,7 @@ public:
 } // end of anonymous namespace
 
 void LEGAsmPrinter::EmitFunctionBodyStart() {
-  MCInstLowering.Initialize(Mang, &MF->getContext());
+  MCInstLowering.Initialize(&MF->getContext());
 }
 
 void LEGAsmPrinter::EmitFunctionEntryLabel() {

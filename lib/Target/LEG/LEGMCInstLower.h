@@ -30,7 +30,7 @@ class LLVM_LIBRARY_VISIBILITY LEGMCInstLower {
 
 public:
   LEGMCInstLower(class AsmPrinter &asmprinter);
-  void Initialize(Mangler *mang, MCContext *C);
+  void Initialize(MCContext *C);
   void Lower(const MachineInstr *MI, MCInst &OutMI) const;
   MCOperand LowerOperand(const MachineOperand &MO, unsigned offset = 0) const;
 

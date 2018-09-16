@@ -16,7 +16,7 @@
 
 #include "llvm/CodeGen/SelectionDAGTargetInfo.h"
 
-gamespace llvm {
+namespace llvm {
 
 class LEGSelectionDAGInfo : public SelectionDAGTargetInfo {
 public:

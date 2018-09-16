@@ -303,6 +303,8 @@ StringRef MCSymbolRefExpr::getVariantKindName(VariantKind Kind) {
   case VK_Hexagon_LD_PLT: return "LDPLT";
   case VK_Hexagon_IE: return "IE";
   case VK_Hexagon_IE_GOT: return "IEGOT";
+  case VK_LEG_LO: return "LEG_LO";
+  case VK_LEG_HI: return "LEG_HI";
   case VK_WebAssembly_FUNCTION: return "FUNCTION";
   case VK_WebAssembly_GLOBAL: return "GLOBAL";
   case VK_WebAssembly_TYPEINDEX: return "TYPEINDEX";
@@ -425,6 +427,8 @@ MCSymbolRefExpr::getVariantKindForName(StringRef Name) {
     .Case("rel32@lo", VK_AMDGPU_REL32_LO)
     .Case("rel32@hi", VK_AMDGPU_REL32_HI)
     .Case("rel64", VK_AMDGPU_REL64)
+    .Case("LEG_LO", VK_LEG_LO)
+    .Case("LEG_HI", VK_LEG_HI)
     .Default(VK_Invalid);
 }
 
