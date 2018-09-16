@@ -81,9 +81,6 @@ extern "C" void LLVMInitializeLEGTargetMC() {
   // Register the MCInstPrinter
   TargetRegistry::RegisterMCInstPrinter(TheLEGTarget, createLEGMCInstPrinter);
 
-  // Register the ASM Backend.
-  TargetRegistry::RegisterMCAsmBackend(TheLEGTarget, createLEGAsmBackend);
-
   // Register the MCCodeEmitter
   TargetRegistry::RegisterMCCodeEmitter(TheLEGTarget, createLEGMCCodeEmitter);
 }

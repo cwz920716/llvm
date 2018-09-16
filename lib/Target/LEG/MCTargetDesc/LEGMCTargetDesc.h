@@ -14,6 +14,8 @@
 #ifndef LEGMCTARGETDESC_H
 #define LEGMCTARGETDESC_H
 
+#include "llvm/MC/MCRegisterInfo.h"
+#include "llvm/MC/MCTargetOptions.h"
 #include "llvm/Support/DataTypes.h"
 
 namespace llvm {
@@ -40,8 +42,9 @@ MCCodeEmitter *createLEGMCCodeEmitter(const MCInstrInfo &MCII,
                                       const MCRegisterInfo &MRI,
                                       MCContext &Ctx);
 
-MCAsmBackend *createLEGAsmBackend(const Target &T, const MCRegisterInfo &MRI,
-                                  const Triple &TT, StringRef CPU);
+MCAsmBackend *createLEGAsmBackend(const Target &T, const MCSubtargetInfo &STI,
+                                    const MCRegisterInfo &MRI,
+                                    const MCTargetOptions &Options);
 
 MCObjectWriter *createLEGELFObjectWriter(raw_pwrite_stream &OS, uint8_t OSABI);
 
