@@ -1,4 +1,4 @@
-;===- ./lib/Target/LEG/MCTargetDesc/LLVMBuild.txt ------------*- Conf -*--===;
+;===- ./lib/Target/LEG/InstPrinter/LLVMBuild.txt -------------*- Conf -*--===;
 ;
 ;                     The LLVM Compiler Infrastructure
 ;
@@ -17,7 +17,7 @@
 
 [component_0]
 type = Library
-name = LEGDesc
+name = LEGAsmPrinter
 parent = LEG
-required_libraries = MC Support LEGAsmPrinter LEGInfo
+required_libraries = MC Support
 add_to_library_groups = LEG

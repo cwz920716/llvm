@@ -15,5 +15,5 @@ using namespace llvm;
 Target llvm::TheLEGTarget;
 
 extern "C" void LLVMInitializeLEGTargetInfo() {
-  RegisterTarget<Triple::leg, /*HasJIT=*/true> X(TheLEGTarget, "leg", "simple leg", "LEG");
+  RegisterTarget<Triple::leg> X(TheLEGTarget, "leg", "LEG");
 }

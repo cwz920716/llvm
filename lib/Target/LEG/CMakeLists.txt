@@ -10,18 +10,18 @@ tablegen(LLVM LEGGenMCCodeEmitter.inc -gen-emitter)
 add_public_tablegen_target(LEGCommonTableGen)
 
 add_llvm_target(LEGCodeGen
-#  LEGSubtarget.cpp
+  LEGSubtarget.cpp
   LEGTargetMachine.cpp
-#  LEGRegisterInfo.cpp
-#  LEGInstrInfo.cpp
-#  LEGFrameLowering.cpp
-#  LEGISelLowering.cpp
-#  LEGSelectionDAGInfo.cpp
-#  LEGISelDAGToDAG.cpp
-#  LEGAsmPrinter.cpp
-#  LEGMCInstLower.cpp
+  LEGRegisterInfo.cpp
+  LEGInstrInfo.cpp
+  LEGFrameLowering.cpp
+  LEGISelLowering.cpp
+  LEGSelectionDAGInfo.cpp
+  LEGISelDAGToDAG.cpp
+  LEGAsmPrinter.cpp
+  LEGMCInstLower.cpp
   )
 
-#add_subdirectory(InstPrinter)
+add_subdirectory(InstPrinter)
 add_subdirectory(TargetInfo)
 add_subdirectory(MCTargetDesc)

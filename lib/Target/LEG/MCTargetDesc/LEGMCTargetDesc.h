@@ -36,6 +36,15 @@ class Triple;
 
 extern Target TheLEGTarget;
 
+MCCodeEmitter *createLEGMCCodeEmitter(const MCInstrInfo &MCII,
+                                      const MCRegisterInfo &MRI,
+                                      MCContext &Ctx);
+
+MCAsmBackend *createLEGAsmBackend(const Target &T, const MCRegisterInfo &MRI,
+                                  const Triple &TT, StringRef CPU);
+
+MCObjectWriter *createLEGELFObjectWriter(raw_pwrite_stream &OS, uint8_t OSABI);
+
 } // End llvm namespace
 
 // Defines symbolic names for LEG registers.  This defines a mapping from

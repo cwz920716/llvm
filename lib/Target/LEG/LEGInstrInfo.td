@@ -267,3 +267,16 @@ let isTerminator = 1, isBranch = 1, Uses = [CPSR] in {
                     "b$cc $dst",  []> {
   }
 }
+
+//===----------------------------------------------------------------------===//
+// Pseudo Instructions
+//===----------------------------------------------------------------------===//
+
+let Defs = [SP], Uses = [SP] in {
+def ADJCALLSTACKDOWN : LEGPseudoInst<(outs), (ins i32imm:$amt1, i32imm:$amt2),
+                                    "# ADJCALLSTACKDOWN $amt1",
+                                    [(callseq_start timm:$amt1, timm:$amt2)]>;
+def ADJCALLSTACKUP   : LEGPseudoInst<(outs), (ins i32imm:$amt1, i32imm:$amt2),
+                                    "# ADJCALLSTACKUP $amt1",
+                                    [(callseq_end timm:$amt1, timm:$amt2)]>;
+}

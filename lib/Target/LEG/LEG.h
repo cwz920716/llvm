@@ -22,8 +22,8 @@ namespace llvm {
 class TargetMachine;
 class LEGTargetMachine;
 
-// FunctionPass *createLEGISelDag(LEGTargetMachine &TM,
-//                                CodeGenOpt::Level OptLevel);
+FunctionPass *createLEGISelDag(LEGTargetMachine &TM,
+                               CodeGenOpt::Level OptLevel);
 } // end namespace llvm;
 
 #endif
