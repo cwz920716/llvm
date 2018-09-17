@@ -123,14 +123,14 @@ void LEGDAGToDAGISel::Select(SDNode *N) {
   llvm::SDNode* NewNode = nullptr;
   switch (N->getOpcode()) {
   case ISD::Constant:
-    NewNode = SelectMoveImmediate(N);
-    assert(NewNode != nullptr);
-    ReplaceNode(N, NewNode);
+    // NewNode = SelectMoveImmediate(N);
+    // assert(NewNode != nullptr);
+    // ReplaceNode(N, NewNode);
     break;
   case ISD::BR_CC:
     NewNode = SelectConditionalBranch(N);
     ReplaceNode(N, NewNode);
-    break;
+    return;
   }
 
   SelectCode(N);
