@@ -1,9 +1,24 @@
 #include "Bulldog.h"
 #include "llvm/IR/InstrTypes.h"
+#include "llvm/Analysis/LoopInfo.h"
 
 namespace bulldog {
 
+void IRPrinter::getAnalysisUsage(AnalysisUsage& AU) const {
+  AU.setPreservesCFG();
+  AU.addRequired<LoopInfoWrapperPass>();
+}
+
 bool IRPrinter::runOnFunction(Function &F) {
+  LoopInfo &LI = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
+  for (auto &bb : F) {
+    auto loop = LI.getLoopFor(&bb);
+    if (loop != nullptr && loop->getLoopDepth() > 0) {
+      auto header = loop->getHeader();
+      loop_header_map[&bb] = header;
+      errs() << bb.getName() << " inside loop " << header->getName() << "\n";
+    }
+  }
   errs() << "Emit assembly for ";
   errs().write_escaped(F.getName()) << '\n';
   EmitFunction(F);
@@ -18,7 +33,11 @@ void IRPrinter::EmitFunction(Function &func) {
 }
 
 void IRPrinter::EmitBasicBlock(BasicBlock &bb) {
-  int id = GetBlockId(&bb);
+  // int id = GetBlockId(&bb);
+  auto bbp = &bb;
+  if (loop_header_map[bbp] != nullptr) {
+    ss << "%" << loop_header_map[bbp]->getName().str() << " ";
+  }
   ss << bb.getName().str() << ":\n";
   for (auto &inst : bb) {
     EmitInstruction(inst);
@@ -72,7 +91,7 @@ void IRPrinter::EmitInstruction(Instruction &inst) {
   } else if (PHINode *phi = dyn_cast<PHINode>(ip)) {
     ss << GetOperand(ip) << " <- ";
     ss << "phi { ";
-    for (int i = 0; i < phi->getNumIncomingValues(); i++) {
+    for (unsigned i = 0; i < phi->getNumIncomingValues(); i++) {
       ss << phi->getIncomingBlock(i)->getName().str() << " : ";
       ss << GetOperand(phi->getIncomingValue(i)) << " , ";
     }
@@ -80,6 +99,7 @@ void IRPrinter::EmitInstruction(Instruction &inst) {
   } else if (CmpInst *cmp = dyn_cast<CmpInst>(ip)) {
     ss << GetOperand(ip) << " <- ";
     if (FCmpInst *fcmp = dyn_cast<FCmpInst>(ip)) {
+      assert(fcmp != nullptr);
       ss << "fcmp ";
     } else {
       // ss << "cmp ";
@@ -111,8 +131,8 @@ void IRPrinter::EmitInstruction(Instruction &inst) {
   } else if (inst.isTerminator()) {
     if (BranchInst *br = dyn_cast<BranchInst>(ip)) {
       if (br->isConditional()) {
-        ss << "if " << GetOperand(br->getCondition()) << " goto " << br->getSuccessor(0)->getName().str();
-        ss << "\ngoto " << br->getSuccessor(1)->getName().str();
+        ss << "if <- " << GetOperand(br->getCondition()) << ", " << br->getSuccessor(0)->getName().str();
+        ss << ", " << br->getSuccessor(1)->getName().str();
       } else {
         ss << "goto " << br->getSuccessor(0)->getName().str();
       }
@@ -131,4 +151,4 @@ void IRPrinter::EmitInstruction(Instruction &inst) {
 }  // namespace bulldog
 
 char bulldog::IRPrinter::ID = 0;
-static RegisterPass<bulldog::IRPrinter> X("print-bulldog", "Hello World Pass", /*CFGOnly=*/false , /*is_analysis*/false);
+static RegisterPass<bulldog::IRPrinter> X("print-bulldog", "Bulldog frontend Pass", /*CFGOnly=*/false , /*is_analysis*/false);

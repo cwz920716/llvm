@@ -36,6 +36,8 @@ class IRPrinter : public FunctionPass {
 
   bool runOnFunction(Function &F) override;
 
+  virtual void getAnalysisUsage(AnalysisUsage& AU) const override;
+
  private:
   void EmitFunction(Function &func);
   void EmitBasicBlock(BasicBlock &bb);
@@ -75,6 +77,7 @@ class IRPrinter : public FunctionPass {
   int num_values;
   std::map<Value *, int> value_id_map;
   std::map<BasicBlock *, int> bb_id_map;
+  std::map<BasicBlock *, BasicBlock *> loop_header_map;
 };
 
 }  // namespace bulldog
