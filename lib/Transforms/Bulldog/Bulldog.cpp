@@ -55,6 +55,12 @@ void IRPrinter::EmitInstruction(Instruction &inst) {
       case Instruction::Mul:
         ss << "mul ";
         break;
+      case Instruction::SDiv:
+        ss << "div ";
+        break;
+      case Instruction::UDiv:
+        ss << "div ";
+        break;
       case Instruction::FAdd:
         ss << "fadd ";
         break;

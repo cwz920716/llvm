@@ -29,6 +29,12 @@ using namespace llvm;
 
 namespace bulldog {
 
+class MachineModel {
+};
+
+class Node {
+};
+
 class IRPrinter : public FunctionPass {
  public:
   static char ID;
