@@ -61,7 +61,7 @@ static unsigned materializeOffset(MachineFunction &MF, MachineBasicBlock &MBB,
                                   unsigned Offset) {
   const TargetInstrInfo &TII = *MF.getSubtarget().getInstrInfo();
   DebugLoc dl = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
-  const uint64_t MaxSubImm = 0xfff;
+  const uint64_t MaxSubImm = 0;
   if (Offset <= MaxSubImm) {
     // The stack offset fits in the ADD/SUB instruction.
     return 0;
@@ -149,3 +149,33 @@ MachineBasicBlock::iterator LEGFrameLowering::eliminateCallFramePseudoInstr(
   }
   return I;
 }
+
+bool LEGFrameLowering::spillCalleeSavedRegisters(MachineBasicBlock &MBB,
+                                 MachineBasicBlock::iterator MI,
+                                 const std::vector<CalleeSavedInfo> &CSI,
+                                 const TargetRegisterInfo *TRI) const {
+    MachineFunction *MF = MBB.getParent();
+    MachineBasicBlock *EntryBlock = &MF->front();
+    const TargetInstrInfo &TII = *MF->getSubtarget().getInstrInfo();
+
+    for (unsigned i = 0, e = CSI.size(); i != e; ++i) {
+      // Add the callee-saved register as live-in. Do not add if the register is
+      // LR and return address is taken, because it has already been added in
+      // method Cpu0TargetLowering::LowerRETURNADDR.
+      // It's killed at the spill, unless the register is LR and return address
+      // is taken.
+      unsigned Reg = CSI[i].getReg();
+      bool IsRAAndRetAddrIsTaken = (Reg == LEG::LR)
+          && MF->getFrameInfo().isReturnAddressTaken();
+      if (!IsRAAndRetAddrIsTaken)
+        EntryBlock->addLiveIn(Reg);
+
+      // Insert the spill to the stack frame.
+      bool IsKill = !IsRAAndRetAddrIsTaken;
+      const TargetRegisterClass *RC = TRI->getMinimalPhysRegClass(Reg);
+      TII.storeRegToStackSlot(*EntryBlock, MI, Reg, IsKill,
+                              CSI[i].getFrameIdx(), RC, TRI);
+    }
+
+    return true;
+  }

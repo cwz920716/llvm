@@ -123,6 +123,21 @@ def MLA  : MulInst<0b0000001, (outs GRRegs:$dst),
   let Inst{3-0}   = src1;
 }
 
+def MLAi  : MulInst<0b0000001, (outs GRRegs:$dst),
+                    (ins GRRegs:$src1, GRRegs:$src2, i32imm:$src3),
+                    "mlai $dst, $src1, $src2, $src3",
+                    [(set i32:$dst, (add (mul i32:$src1, i32:$src2),
+                                         LEGimm4:$src3))]> {
+  bits<4> dst;
+  bits<4> src1;
+  bits<4> src2;
+  bits<4> src3;
+  let Inst{19-16} = dst;
+  let Inst{15-12} = src3;
+  let Inst{11-8}  = src2;
+  let Inst{3-0}   = src1;
+}
+
 //===----------------------------------------------------------------------===//
 // Mov Instructions
 //===----------------------------------------------------------------------===//

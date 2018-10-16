@@ -71,10 +71,12 @@ bool LEGDAGToDAGISel::SelectAddr(SDValue Addr, SDValue &Base, SDValue &Offset) {
 
 SDNode *LEGDAGToDAGISel::SelectMoveImmediate(SDNode *N) {
   // Make sure the immediate size is supported.
+  SDLoc DL(N);
   ConstantSDNode *ConstVal = cast<ConstantSDNode>(N);
   uint64_t ImmVal = ConstVal->getZExtValue();
-  uint64_t SupportedMask = 0xfffffffff;
-  if ((ImmVal & SupportedMask) != ImmVal) {
+  errs() << "ImmVal = " << ImmVal << "\n";
+  uint64_t SupportedMask = 0x0000ffff;
+  if ((ImmVal & SupportedMask) == ImmVal) {
     SelectCode(N);
     return nullptr;
   }
@@ -84,16 +86,18 @@ SDNode *LEGDAGToDAGISel::SelectMoveImmediate(SDNode *N) {
   uint64_t HiMask = 0xffff0000;
   uint64_t ImmLo = (ImmVal & LoMask);
   uint64_t ImmHi = (ImmVal & HiMask);
-  SDValue ConstLo = CurDAG->getTargetConstant(ImmLo, N, MVT::i32);
+  SDValue ConstLo = CurDAG->getTargetConstant(ImmLo, DL, MVT::i32);
   MachineSDNode *Move =
-      CurDAG->getMachineNode(LEG::MOVLOi16, N, MVT::i32, ConstLo);
+      CurDAG->getMachineNode(LEG::MOVLOi16, DL, MVT::i32, ConstLo);
 
   // Select the low part of the immediate move, if needed.
   if (ImmHi) {
-    SDValue ConstHi = CurDAG->getTargetConstant(ImmHi >> 16, N, MVT::i32);
-    Move = CurDAG->getMachineNode(LEG::MOVHIi16, N, MVT::i32, SDValue(Move, 0),
+    SDValue ConstHi = CurDAG->getTargetConstant(ImmHi >> 16, DL, MVT::i32);
+    Move = CurDAG->getMachineNode(LEG::MOVHIi16, DL, MVT::i32, SDValue(Move, 0),
                                   ConstHi);
   }
+
+  ReplaceUses(SDValue(N, 0), SDValue(Move, 0));
 
   return Move;
 }
@@ -123,10 +127,8 @@ void LEGDAGToDAGISel::Select(SDNode *N) {
   llvm::SDNode* NewNode = nullptr;
   switch (N->getOpcode()) {
   case ISD::Constant:
-    // NewNode = SelectMoveImmediate(N);
-    // assert(NewNode != nullptr);
-    // ReplaceNode(N, NewNode);
-    break;
+    NewNode = SelectMoveImmediate(N);
+    return;
   case ISD::BR_CC:
     NewNode = SelectConditionalBranch(N);
     ReplaceNode(N, NewNode);

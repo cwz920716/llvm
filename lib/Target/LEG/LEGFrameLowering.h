@@ -17,6 +17,8 @@
 
 #include "llvm/CodeGen/TargetFrameLowering.h"
 #include "llvm/Target/TargetMachine.h"
+#include "llvm/CodeGen/MachineFrameInfo.h"
+#include "llvm/CodeGen/TargetInstrInfo.h"
 
 namespace llvm {
 class LEGSubtarget;
@@ -37,6 +39,20 @@ public:
                                      const override;
 
   bool hasFP(const MachineFunction &MF) const override;
+
+  bool spillCalleeSavedRegisters(MachineBasicBlock &MBB,
+                                 MachineBasicBlock::iterator MI,
+                                 const std::vector<CalleeSavedInfo> &CSI,
+                                 const TargetRegisterInfo *TRI) const override;
+  
+  bool
+  restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
+                              MachineBasicBlock::iterator MI,
+                              std::vector<CalleeSavedInfo> &CSI,
+                              const TargetRegisterInfo *TRI) const override {
+    // TODO
+    return true;
+  }
 
   //! Stack slot size (4 bytes)
   static int stackSlotSize() { return 4; }
